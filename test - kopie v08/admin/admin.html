@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Productbeheer</title>
+    <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+
+<header class="header">
+    <h1>Admin - Productbeheer</h1>
+    <button onclick="openPopup()">Nieuw Product Toevoegen</button>
+</header>
+
+<!-- Sectie voor servicekosten bewerken -->
+<div class="service-fee-section">
+    <h3>Servicekosten Instellen</h3>
+    <p>Huidige Servicekosten: <span id="current-fee">Laden...</span></p>
+    <input type="number" id="new-service-fee" placeholder="Nieuwe Servicekosten (€)" step="0.01">
+    <button onclick="updateServiceFee()">Update Servicekosten</button>
+</div>
+
+<!-- Popup voor product toevoegen -->
+<div class="popup-overlay" id="popup-overlay" onclick="closePopup()"></div>
+<div class="popup" id="popup">
+    <button class="popup-close" onclick="closePopup()">X</button>
+    <h3>Nieuw Product Toevoegen</h3>
+    <input type="text" id="add-name" placeholder="Naam">
+    <textarea id="add-description" placeholder="Beschrijving"></textarea>
+    <input type="number" id="add-price" placeholder="Prijs" step="0.01">
+    <input type="file" id="add-image" accept="image/*">
+    <select id="add-category">
+        <!-- Categorieën worden hier geladen -->
+    </select>
+    <button onclick="addProduct()">Toevoegen</button>
+</div>
+
+<!-- Popup voor bewerken van product -->
+<div class="popup-overlay" id="edit-popup-overlay" onclick="closeEditPopup()"></div>
+<div class="popup" id="edit-popup">
+    <button class="popup-close" onclick="closeEditPopup()">X</button>
+    <h3>Bewerk Product</h3>
+    <input type="text" id="edit-name" placeholder="Naam">
+    <textarea id="edit-description" placeholder="Beschrijving"></textarea>
+    <input type="number" id="edit-price" placeholder="Prijs" step="0.01">
+    <input type="file" id="edit-image" accept="image/*">
+    <select id="edit-category">
+        <!-- Categorieën worden hier geladen -->
+    </select>
+    
+    <!-- Image Preview voor bewerken -->
+    <div>
+        <h4>Huidige Afbeelding:</h4>
+        <img id="edit-image-preview" src="" alt="Afbeelding Preview" style="max-width: 300px; max-height: 200px;">
+    </div>
+
+    <input type="hidden" id="edit-product-id">
+    <button onclick="saveEditedProduct()">Opslaan</button>
+</div>
+
+<!-- Sectie voor kortingscodes -->
+<div class="discount-section">
+    <h3>Kortingscodes</h3>
+    <form id="discount-form">
+        <input type="text" id="code" placeholder="Kortingscode" required>
+        <input type="number" id="discount_value" placeholder="Waarde" required>
+        <select id="discount_type">
+            <option value="percentage">Percentage</option>
+            <option value="euro">Euro</option>
+        </select>
+        <input type="date" id="expiration_date" required>
+        <button type="submit">Kortingscode Toevoegen</button>
+    </form>
+    <ul id="discount-list">
+        <!-- Kortingscodes worden hier geladen -->
+    </ul>
+</div>
+
+<!-- Popup voor succes/foutmelding -->
+<div id="popup-message" class="popup">
+    <div class="popup-content">
+        <span id="popup-close" class="popup-close">×</span>
+        <p id="popup-text"></p>
+    </div>
+</div>
+
+<!-- Sectie voor het beheren van verplichte categorieën -->
+<div class="category-management-section">
+    <h3>Beheer Verplichte Categorieën</h3>
+    <table id="category-table">
+        <thead>
+            <tr>
+                <th>Categorie</th>
+                <th>Verplicht</th>
+                <th>Acties</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Categorieën worden hier geladen -->
+        </tbody>
+    </table>
+</div>
+
+
+<!-- Producten weergave -->
+<div id="products-container">
+    <!-- Producten worden hier geladen -->
+</div>
+
+<script src="admin.js"></script>
+
+</body>
+</html>

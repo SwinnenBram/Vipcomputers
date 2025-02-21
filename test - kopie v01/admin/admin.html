@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Productbeheer</title>
+    <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+
+<header>
+    <h1>Admin - Productbeheer</h1>
+</header>
+
+<!-- Button voor het toevoegen van een nieuw product -->
+<button id="add-product-btn" onclick="document.getElementById('add-product-form').style.display = 'block'">Nieuw Product Toevoegen</button>
+
+<!-- Formulier voor nieuw product (stond voorheen in de popup) -->
+<div id="add-product-form" style="display: none;">
+    <input type="text" id="add-name" placeholder="Naam">
+    <textarea id="add-description" placeholder="Beschrijving"></textarea>
+    <input type="number" id="add-price" placeholder="Prijs" step="0.01">
+    <input type="text" id="add-image" placeholder="Afbeelding URL">
+    <input type="text" id="add-category" placeholder="Categorie">
+    <button onclick="addProduct()">Opslaan</button>
+    <button onclick="document.getElementById('add-product-form').style.display = 'none'">Annuleren</button>
+</div>
+
+<!-- Productenweergave -->
+<div id="products-container">
+    <!-- Producten worden hier geladen -->
+</div>
+
+<script src="admin.js"></script>
+
+</body>
+</html>

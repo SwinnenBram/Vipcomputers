@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PC Builder - Producten</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header>
+    <h1>PC Builder - Producten</h1>
+</header>
+
+<!-- Winkelwagentje -->
+<div class="cart">
+    <h3>Winkelwagentje</h3>
+    <div class="cart-items" id="cart-items">
+        <!-- Items in het winkelwagentje komen hier -->
+    </div>
+    <div id="service-fee" class="cart-item">
+        <!-- Service fee wordt hier toegevoegd -->
+    </div>
+    <p id="cart-total">Totaal: €0</p> <!-- Totaalprijs toegevoegd -->
+    <button id="checkout-btn">Afrekenen</button>
+</div>
+
+<!-- Producten weergave -->
+<div id="products-container">
+    <!-- Producten per categorie komen hier -->
+</div>
+
+<script>
+    // Variabelen voor winkelwagentje en service fee
+    let cart = [];
+    let serviceFee = 0; // Variabele voor de service fee
+
+    // Haal de service fee op van de server
+    fetch('http://localhost:3000/service-fee')
+        .then(response => response.json())
+        .then(data => {
+            serviceFee = parseFloat(data.serviceFee); // Sla de service fee op
+            updateCart(); // Werk winkelwagentje bij
+        })
+        .catch(err => console.error('Fout bij het ophalen van servicekosten:', err));
+
+    // Haal producten per categorie op van de server
+    fetch('http://localhost:3000/products')
+        .then(response => response.json())
+        .then(data => {
+            console.log('Ontvangen producten:', data); // Log de ontvangen data
+            const productsContainer = document.getElementById('products-container');
+
+            const categories = Object.entries(data); // Object.entries() geeft de categorieën in de juiste volgorde
+            categories.forEach(([category, products]) => {
+                console.log('Categorie:', category); // Log de categorie
+                console.log('Producten:', products); // Log de producten in deze categorie
+                
+                const categorySection = document.createElement('div');
+                categorySection.classList.add('category');
+                
+                // Voeg een categorie naam toe
+                categorySection.innerHTML = `<h2>${category}</h2>`;
+                
+                const productsContainerForCategory = document.createElement('div');
+                productsContainerForCategory.classList.add('products-container');
+
+                // Voeg de producten toe
+                products.forEach(product => {
+                    const productCard = document.createElement('div');
+                    productCard.classList.add('product-card');
+                    productCard.innerHTML = `
+                        <img src="http://localhost:3000${product.image_url}" alt="${product.name}">
+                        <h4>${product.name}</h4>
+                        <p>${product.description}</p>
+                        <p>Prijs: €${product.price}</p>
+                        <button onclick="addToCart(${product.product_id}, '${product.name}', ${product.price})">Selecteer</button>
+                    `;
+                    productsContainerForCategory.appendChild(productCard);
+                });
+
+                categorySection.appendChild(productsContainerForCategory);
+                productsContainer.appendChild(categorySection);
+            });
+        })
+        .catch(err => console.error('Fout bij het ophalen van producten:', err));
+
+
+    // Voeg product toe aan het winkelwagentje
+    function addToCart(productId, name, price) {
+        const product = { productId, name, price };
+        cart.push(product);
+        updateCart(); // Werk het winkelwagentje bij
+    }
+
+    // Werk winkelwagentje bij
+    function updateCart() {
+        const cartItemsContainer = document.getElementById('cart-items');
+        const cartTotalElement = document.getElementById('cart-total');
+        const serviceFeeElement = document.getElementById('service-fee');
+        cartItemsContainer.innerHTML = ''; // Maak de lijst leeg
+        serviceFeeElement.innerHTML = ''; // Maak de service fee leeg
+
+        let total = 0; // Variabele voor totaalprijs
+
+        cart.forEach(item => {
+            const itemElement = document.createElement('div');
+            itemElement.className = 'cart-item';
+            itemElement.innerHTML = `<p>${item.name} - €${item.price.toFixed(2)}</p>`;
+            cartItemsContainer.appendChild(itemElement);
+
+            total += item.price; // Tel de prijs van producten op
+        });
+
+        // Voeg de service fee toe als een aparte regel
+        const serviceFeeText = `<p>Service Fee (Verwerkingskosten) - €${serviceFee.toFixed(2)}</p>`;
+        serviceFeeElement.innerHTML = serviceFeeText;
+
+        // Tel de service fee op bij het totaal
+        total += serviceFee;
+
+        // Werk het totaalbedrag bij in het winkelwagentje
+        cartTotalElement.textContent = `Totaal: €${total.toFixed(2)}`;
+    }
+
+    // Knop voor afrekenen
+    document.getElementById('checkout-btn').addEventListener('click', () => {
+        if (cart.length > 0) {
+            alert('Afrekenen: ' + cart.length + ' item(s) - Totaal: €' + cart.reduce((sum, item) => sum + item.price, 0).toFixed(2));
+        } else {
+            alert('Je winkelwagentje is leeg!');
+        }
+    });
+</script>
+
+</body>
+</html>

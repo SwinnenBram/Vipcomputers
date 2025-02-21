@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PC Builder - Producten</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        header {
+            background-color: #333;
+            color: white;
+            text-align: center;
+            padding: 1rem;
+        }
+
+        #products-container {
+            padding: 20px;
+        }
+
+        .category {
+            margin-top: 30px;
+        }
+
+        .category h2 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .products-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            padding: 20px;
+        }
+
+        .product-card {
+            border: 1px solid #ccc;
+            padding: 20px;
+            text-align: center;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .product-card:hover {
+            transform: scale(1.05);
+        }
+
+        .product-card img {
+            width: 100%;
+            max-width: 200px;
+            height: 200px;
+            object-fit: cover;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+
+        .product-card h4 {
+            margin: 10px 0;
+            font-size: 18px;
+        }
+
+        .product-card p {
+            margin: 5px 0;
+        }
+
+        .product-card button {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            padding: 10px;
+            cursor: pointer;
+            border-radius: 5px;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+
+        .product-card button:hover {
+            background-color: #218838;
+        }
+
+        .cart {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: #333;
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            width: 250px;
+            max-height: 400px;
+            overflow-y: auto;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .cart h3 {
+            margin-top: 0;
+        }
+
+        .cart-items {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .cart-item {
+            margin: 10px 0;
+            padding: 5px;
+            border-bottom: 1px solid #ccc;
+        }
+
+        .cart-item p {
+            margin: 5px 0;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>PC Builder - Producten</h1>
+</header>
+
+<!-- Winkelwagentje -->
+<div class="cart">
+    <h3>Winkelwagentje</h3>
+    <div class="cart-items" id="cart-items">
+        <!-- Items in het winkelwagentje komen hier -->
+    </div>
+    <p id="cart-total">Totaal: €0</p> <!-- Totaalprijs toegevoegd -->
+    <button id="checkout-btn">Afrekenen</button>
+</div>
+
+<!-- Producten weergave -->
+<div id="products-container">
+    <!-- Producten per categorie komen hier -->
+</div>
+
+<script>
+    // Variabelen voor winkelwagentje
+    let cart = [];
+
+    // Haal producten per categorie op van de server
+    fetch('http://localhost:3000/products')
+        .then(response => response.json())
+        .then(data => {
+            const productsContainer = document.getElementById('products-container');
+
+            // Itereer door elke categorie
+            for (const category in data) {
+                const categorySection = document.createElement('div');
+                categorySection.classList.add('category');
+                
+                // Voeg een categorie naam toe
+                categorySection.innerHTML = `<h2>${category}</h2>`;
+                
+                // Maak een container voor de producten in deze categorie
+                const productsContainerForCategory = document.createElement('div');
+                productsContainerForCategory.classList.add('products-container');
+
+                // Voeg de producten in deze categorie toe
+                data[category].forEach(product => {
+                    const productCard = document.createElement('div');
+                    productCard.classList.add('product-card');
+                    productCard.innerHTML = `
+                        <img src="${product.image_url}" alt="${product.name}">
+                        <h4>${product.name}</h4>
+                        <p>${product.description}</p>
+                        <p>Prijs: €${product.price}</p>
+                        <button onclick="addToCart(${product.product_id}, '${product.name}', ${product.price})">Selecteer</button>
+                    `;
+                    productsContainerForCategory.appendChild(productCard);
+                });
+
+                // Voeg de productencontainer toe aan de sectie van de categorie
+                categorySection.appendChild(productsContainerForCategory);
+                productsContainer.appendChild(categorySection);
+            }
+        })
+        .catch(err => console.error('Fout bij het ophalen van producten:', err));
+
+    // Voeg product toe aan het winkelwagentje
+    function addToCart(productId, name, price) {
+        const product = { productId, name, price };
+        cart.push(product);
+        updateCart();
+    }
+
+    // Werk winkelwagentje bij
+    function updateCart() {
+        const cartItemsContainer = document.getElementById('cart-items');
+        const cartTotalElement = document.getElementById('cart-total');
+        cartItemsContainer.innerHTML = ''; // Maak de lijst leeg
+
+        let total = 0; // Variabele voor totaalprijs
+
+        cart.forEach(item => {
+            const itemElement = document.createElement('div');
+            itemElement.className = 'cart-item';
+            itemElement.innerHTML = `<p>${item.name} - €${item.price.toFixed(2)}</p>`;
+            cartItemsContainer.appendChild(itemElement);
+
+            total += item.price; // Tel de prijs op
+        });
+
+        // Werk het totaalbedrag bij in het winkelwagentje
+        cartTotalElement.textContent = `Totaal: €${total.toFixed(2)}`;
+    }
+
+    // Knop voor afrekenen
+    document.getElementById('checkout-btn').addEventListener('click', () => {
+        if (cart.length > 0) {
+            alert('Afrekenen: ' + cart.length + ' item(s) - Totaal: €' + cart.reduce((sum, item) => sum + item.price, 0).toFixed(2));
+        } else {
+            alert('Je winkelwagentje is leeg!');
+        }
+    });
+</script>
+
+</body>
+</html>

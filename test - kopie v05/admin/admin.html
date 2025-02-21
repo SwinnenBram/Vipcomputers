@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Productbeheer</title>
+    <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+
+<header class="header">
+    <h1>Admin - Productbeheer</h1>
+    <button onclick="openPopup()">Nieuw Product Toevoegen</button>
+</header>
+
+<!-- Sectie voor servicekosten bewerken -->
+<div class="service-fee-section">
+    <h3>Servicekosten Instellen</h3>
+    <p>Huidige Servicekosten: <span id="current-fee">Laden...</span></p>
+    <input type="number" id="new-service-fee" placeholder="Nieuwe Servicekosten (€)" step="0.01">
+    <button onclick="updateServiceFee()">Update Servicekosten</button>
+</div>
+
+<!-- Popup voor product toevoegen -->
+<div class="popup-overlay" id="popup-overlay" onclick="closePopup()"></div>
+<div class="popup" id="popup">
+    <button class="popup-close" onclick="closePopup()">X</button>
+    <h3>Nieuw Product Toevoegen</h3>
+    <input type="text" id="add-name" placeholder="Naam">
+    <textarea id="add-description" placeholder="Beschrijving"></textarea>
+    <input type="number" id="add-price" placeholder="Prijs" step="0.01">
+    <input type="file" id="add-image" accept="image/*">
+    <select id="add-category">
+        <!-- Categorieën worden hier geladen -->
+    </select>
+    <button onclick="addProduct()">Toevoegen</button>
+</div>
+
+<!-- Producten weergave -->
+<div id="products-container">
+    <!-- Producten worden hier geladen -->
+</div>
+
+<script src="admin.js"></script>
+
+</body>
+</html>

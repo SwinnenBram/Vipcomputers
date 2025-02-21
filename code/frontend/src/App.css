@@ -1,0 +1,65 @@
+.App {
+  font-family: Arial, sans-serif;
+  padding: 20px;
+  background-color: #f4f4f9;
+}
+
+h1 {
+  text-align: center;
+}
+
+.categories-list {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.categories-list button {
+  padding: 10px 20px;
+  background-color: #007BFF;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  margin: 10px;
+}
+
+.categories-list button:hover {
+  background-color: #0056b3;
+}
+
+.parts-list {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.part-item {
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  padding: 10px;
+  margin: 10px;
+  width: 200px;
+  background-color: white;
+}
+
+button {
+  padding: 8px 12px;
+  background-color: #007BFF;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: #0056b3;
+}
+
+ul {
+  list-style-type: none;
+}
+
+ul li {
+  padding: 5px;
+}

@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PC Builder - Producten</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header>
+    <h1>PC Builder - Producten</h1>
+</header>
+
+<!-- Winkelwagentje -->
+<div class="cart">
+    <h3>Winkelwagentje</h3>
+    <div class="cart-items" id="cart-items">
+        <!-- Items in het winkelwagentje komen hier -->
+    </div>
+    <div id="service-fee" class="cart-item">
+        <!-- Service fee wordt hier toegevoegd -->
+    </div>
+    <p id="cart-total">Totaal: €0</p> <!-- Totaalprijs toegevoegd -->
+
+    <!-- Kortingscode invoeren -->
+    <input type="text" id="discount-code" placeholder="Voer kortingscode in">
+    <button id="apply-discount-btn">Kortingscode toepassen</button>
+    <p id="discount-message"></p> <!-- Bericht na het invoeren van een kortingscode -->
+
+    <button id="checkout-btn">Afrekenen</button>
+</div>
+
+<!-- Producten weergave -->
+<div id="products-container">
+    <!-- Producten per categorie komen hier -->
+</div>
+<!-- Modal voor ontbrekende categorieën -->
+<div id="missing-categories-modal" class="modal">
+    <div class="modal-content">
+        <span id="close-modal" class="close">&times;</span>
+        <h2>Ontbrekende Categorieën</h2>
+        <p id="missing-categories-message"></p>
+    </div>
+</div>
+
+<!-- Popup voor afrekenen -->
+<div class="popup-overlay" id="checkout-popup-overlay"></div>
+<div class="popup" id="checkout-popup">
+    <h3>Voer je gegevens in</h3>
+
+    <div class="form-group">
+        <label for="checkout-name">Naam</label>
+        <input type="text" id="checkout-name" placeholder="Naam" required>
+    </div>
+    
+    <div class="form-group">
+        <label for="checkout-email">E-mailadres</label>
+        <input type="email" id="checkout-email" placeholder="E-mailadres" required>
+    </div>
+    
+    <div class="form-group">
+        <label for="checkout-phone">Telefoonnummer</label>
+        <input type="tel" id="checkout-phone" placeholder="Telefoonnummer" required>
+    </div>
+    
+    <div class="form-group">
+        <label for="checkout-address">Straat + Nummer</label>
+        <input type="text" id="checkout-address" placeholder="Straat + Nummer" required>
+    </div>
+    
+    <div class="form-group">
+        <label for="checkout-city">Stad + Postcode</label>
+        <input type="text" id="checkout-city" placeholder="Stad + Postcode" required>
+    </div>
+
+    <div class="button-container">
+        <button class="offer-button" onclick="submitOffer()">Vraag offerte aan</button>
+        <button class="cancel-button" onclick="closeCheckoutPopup()">Annuleer</button>
+    </div>
+</div>
+
+
+
+
+<script>
+
+window.onload = function() {
+    // Zorg ervoor dat de popup en overlay verborgen zijn bij het laden van de pagina
+    document.getElementById('checkout-popup-overlay').style.display = 'none';
+    document.getElementById('checkout-popup').style.display = 'none';
+};
+
+    let cart = [];
+    let serviceFee = 0;
+    let discount = 0; // Opslag voor de korting
+    let requiredCategories = [];
+
+    
+
+    // Haal de service fee op van de server
+    fetch('http://localhost:3000/service-fee')
+        .then(response => response.json())
+        .then(data => {
+            serviceFee = parseFloat(data.serviceFee);
+            updateCart();
+        })
+        .catch(err => console.error('Fout bij het ophalen van servicekosten:', err));
+
+    // Haal de verplichte categorieën op van de server
+fetch('http://localhost:3000/categories')
+    .then(response => response.json())
+    .then(categories => {
+        // Filter de categorieën waar 'required' true is
+        requiredCategories = categories.filter(category => category.required).map(category => category.name);
+        console.log('Verplichte categorieën:', requiredCategories);
+    })
+    .catch(err => console.error('Fout bij het ophalen van categorieën:', err));
+
+// Open de afreken-popup
+function openCheckoutPopup() {
+    document.getElementById('checkout-popup-overlay').style.display = 'block';
+    document.getElementById('checkout-popup').style.display = 'block';
+}
+
+// Sluit de afreken-popup
+function closeCheckoutPopup() {
+    document.getElementById('checkout-popup-overlay').style.display = 'none';
+    document.getElementById('checkout-popup').style.display = 'none';
+}
+
+// Verzend de offerte via een POST-aanroep naar de server
+function submitOffer() {
+    const offerDetails = cart.map(item => {
+        return {
+            name: item.name,
+            price: item.price.toFixed(2),
+            category: item.category
+        };
+    });
+
+    // Voeg totaalprijs en servicekosten toe aan het aanbod
+    const total = cart.reduce((sum, item) => sum + item.price, 0) + serviceFee;
+    const offerData = {
+        products: offerDetails,
+        total: total.toFixed(2),
+        name: document.getElementById('checkout-name').value,
+        email: document.getElementById('checkout-email').value,
+        phone: document.getElementById('checkout-phone').value,
+        address: document.getElementById('checkout-address').value,
+        city: document.getElementById('checkout-city').value
+    };
+
+    console.log(offerData);  // Voeg deze regel toe om te controleren wat er wordt verzonden
+
+    fetch('http://localhost:3000/send-offer', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(offerData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Offerte is succesvol verstuurd!');
+            closeCheckoutPopup(); // Sluit de popup
+        } else {
+            alert('Er is iets mis gegaan bij het versturen van de offerte.');
+        }
+    })
+    .catch(error => {
+        console.error('Fout bij het versturen van de offerte:', error);
+        alert('Er is iets mis gegaan bij het versturen van de offerte.');
+    });
+}
+
+
+
+// Afrekenknop functionaliteit
+document.getElementById('checkout-btn').addEventListener('click', () => {
+    if (cart.length > 0) {
+        // Verkrijg alle categorieën die in de winkelwagentje zitten
+        const cartCategories = cart.map(item => item.category);
+
+        // Controleer of alle verplichte categorieën aanwezig zijn
+        const missingCategories = requiredCategories.filter(category => !cartCategories.includes(category));
+
+        if (missingCategories.length > 0) {
+            // Toon de modal met ontbrekende categorieën
+            const missingCategoriesMessage = '❌ Je winkelwagentje mist producten uit de volgende verplichte categorieën: ' + missingCategories.join(', ');
+            document.getElementById('missing-categories-message').textContent = missingCategoriesMessage;
+            document.getElementById('missing-categories-modal').style.display = "block"; // Modal tonen
+        } else {
+            // Geen ontbrekende categorieën, dus open de afreken-popup
+            openCheckoutPopup();
+        }
+    } else {
+        alert('Je winkelwagentje is leeg!');
+    }
+});
+
+
+// Sluit de ontbrekende categorieën modal als je op het sluiticoon klikt
+document.getElementById('close-modal').addEventListener('click', () => {
+    document.getElementById('missing-categories-modal').style.display = "none";
+});
+
+// Sluit de ontbrekende categorieën modal als je buiten de modal klikt
+window.addEventListener('click', (event) => {
+    const modal = document.getElementById('missing-categories-modal');
+    if (event.target === modal) {
+        modal.style.display = "none";
+    }
+});
+
+
+
+    // Haal producten op en toon ze in categorieën
+    fetch('http://localhost:3000/products')
+        .then(response => response.json())
+        .then(data => {
+            const productsContainer = document.getElementById('products-container');
+
+            Object.entries(data).forEach(([category, products]) => {
+                const categorySection = document.createElement('div');
+                categorySection.classList.add('category');
+                categorySection.innerHTML = `<h2>${category}</h2>`;
+
+                const productsContainerForCategory = document.createElement('div');
+                productsContainerForCategory.classList.add('products-container');
+
+                products.forEach(product => {
+                    const productCard = document.createElement('div');
+                    productCard.classList.add('product-card');
+                    productCard.innerHTML = `
+                        <img src="http://localhost:3000${product.image_url}" alt="${product.name}">
+                        <h4>${product.name}</h4>
+                        <p>${product.description}</p>
+                        <p>Prijs: €${product.price}</p>
+                        <button onclick="addToCart(${product.product_id}, '${product.name}', ${product.price}, '${category}')">Selecteer</button>
+                    `;
+                    productsContainerForCategory.appendChild(productCard);
+                });
+
+                categorySection.appendChild(productsContainerForCategory);
+                productsContainer.appendChild(categorySection);
+            });
+        })
+        .catch(err => console.error('Fout bij het ophalen van producten:', err));
+
+    // Voeg product toe aan winkelwagentje
+    function addToCart(productId, name, price, category) {
+        cart.push({ productId, name, price, category });
+        updateCart();
+    }
+
+    // Werk winkelwagentje bij
+    function updateCart() {
+        const cartItemsContainer = document.getElementById('cart-items');
+        const cartTotalElement = document.getElementById('cart-total');
+        const serviceFeeElement = document.getElementById('service-fee');
+        cartItemsContainer.innerHTML = '';
+        serviceFeeElement.innerHTML = '';
+
+        let total = 0;
+
+        cart.forEach(item => {
+            const itemElement = document.createElement('div');
+            itemElement.className = 'cart-item';
+            itemElement.innerHTML = `<p>${item.name} - €${item.price.toFixed(2)}</p>`;
+            cartItemsContainer.appendChild(itemElement);
+            total += item.price;
+        });
+
+        // Voeg servicekosten toe
+        serviceFeeElement.innerHTML = `<p>Service Fee - €${serviceFee.toFixed(2)}</p>`;
+        total += serviceFee;
+
+        // Pas korting toe (indien van toepassing)
+        if (discount > 0) {
+            total -= discount;
+            total = total < 0 ? 0 : total; // Zorg dat het niet negatief wordt
+        }
+
+        cartTotalElement.textContent = `Totaal: €${total.toFixed(2)}`;
+    }
+
+    // Kortingscode toepassen
+    document.getElementById('apply-discount-btn').addEventListener('click', () => {
+        const discountCode = document.getElementById('discount-code').value.trim();
+        if (!discountCode) {
+            alert('Voer een kortingscode in!');
+            return;
+        }
+
+        fetch('http://localhost:3000/apply-discount', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ code: discountCode })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                document.getElementById('discount-message').textContent = data.error;
+            } else {
+                discount = data.discount_value;
+                document.getElementById('discount-message').textContent = `Korting toegepast: €${discount}`;
+                updateCart();
+            }
+        })
+        .catch(err => console.error('Fout bij het toepassen van kortingscode:', err));
+    });
+
+
+
+// Sluit de modal als je op het sluiticoon klikt
+document.getElementById('close-modal').addEventListener('click', () => {
+    const modal = document.getElementById('missing-categories-modal');
+    modal.style.display = "none"; // Modal verbergen
+});
+
+// Sluit de modal als je buiten de modal klikt
+window.addEventListener('click', (event) => {
+    const modal = document.getElementById('missing-categories-modal');
+    if (event.target === modal) {
+        modal.style.display = "none"; // Modal verbergen als je buiten klikt
+    }
+});
+
+
+
+
+</script>
+
+</body>
+</html>

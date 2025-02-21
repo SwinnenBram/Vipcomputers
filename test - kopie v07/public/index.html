@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PC Builder - Producten</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header>
+    <h1>PC Builder - Producten</h1>
+</header>
+
+<!-- Winkelwagentje -->
+<div class="cart">
+    <h3>Winkelwagentje</h3>
+    <div class="cart-items" id="cart-items">
+        <!-- Items in het winkelwagentje komen hier -->
+    </div>
+    <div id="service-fee" class="cart-item">
+        <!-- Service fee wordt hier toegevoegd -->
+    </div>
+    <p id="cart-total">Totaal: €0</p> <!-- Totaalprijs toegevoegd -->
+
+    <!-- Kortingscode invoeren -->
+    <input type="text" id="discount-code" placeholder="Voer kortingscode in">
+    <button id="apply-discount-btn">Kortingscode toepassen</button>
+    <p id="discount-message"></p> <!-- Bericht na het invoeren van een kortingscode -->
+
+    <button id="checkout-btn">Afrekenen</button>
+</div>
+
+<!-- Producten weergave -->
+<div id="products-container">
+    <!-- Producten per categorie komen hier -->
+</div>
+
+<script>
+    let cart = [];
+    let serviceFee = 0;
+    let discount = 0; // Opslag voor de korting
+
+    // Haal de service fee op van de server
+    fetch('http://localhost:3000/service-fee')
+        .then(response => response.json())
+        .then(data => {
+            serviceFee = parseFloat(data.serviceFee);
+            updateCart();
+        })
+        .catch(err => console.error('Fout bij het ophalen van servicekosten:', err));
+
+    // Haal producten op en toon ze in categorieën
+    fetch('http://localhost:3000/products')
+        .then(response => response.json())
+        .then(data => {
+            const productsContainer = document.getElementById('products-container');
+
+            Object.entries(data).forEach(([category, products]) => {
+                const categorySection = document.createElement('div');
+                categorySection.classList.add('category');
+                categorySection.innerHTML = `<h2>${category}</h2>`;
+
+                const productsContainerForCategory = document.createElement('div');
+                productsContainerForCategory.classList.add('products-container');
+
+                products.forEach(product => {
+                    const productCard = document.createElement('div');
+                    productCard.classList.add('product-card');
+                    productCard.innerHTML = `
+                        <img src="http://localhost:3000${product.image_url}" alt="${product.name}">
+                        <h4>${product.name}</h4>
+                        <p>${product.description}</p>
+                        <p>Prijs: €${product.price}</p>
+                        <button onclick="addToCart(${product.product_id}, '${product.name}', ${product.price})">Selecteer</button>
+                    `;
+                    productsContainerForCategory.appendChild(productCard);
+                });
+
+                categorySection.appendChild(productsContainerForCategory);
+                productsContainer.appendChild(categorySection);
+            });
+        })
+        .catch(err => console.error('Fout bij het ophalen van producten:', err));
+
+    // Voeg product toe aan winkelwagentje
+    function addToCart(productId, name, price) {
+        cart.push({ productId, name, price });
+        updateCart();
+    }
+
+    // Werk winkelwagentje bij
+    function updateCart() {
+        const cartItemsContainer = document.getElementById('cart-items');
+        const cartTotalElement = document.getElementById('cart-total');
+        const serviceFeeElement = document.getElementById('service-fee');
+        cartItemsContainer.innerHTML = '';
+        serviceFeeElement.innerHTML = '';
+
+        let total = 0;
+
+        cart.forEach(item => {
+            const itemElement = document.createElement('div');
+            itemElement.className = 'cart-item';
+            itemElement.innerHTML = `<p>${item.name} - €${item.price.toFixed(2)}</p>`;
+            cartItemsContainer.appendChild(itemElement);
+            total += item.price;
+        });
+
+        // Voeg servicekosten toe
+        serviceFeeElement.innerHTML = `<p>Service Fee - €${serviceFee.toFixed(2)}</p>`;
+        total += serviceFee;
+
+        // Pas korting toe (indien van toepassing)
+        if (discount > 0) {
+            total -= discount;
+            total = total < 0 ? 0 : total; // Zorg dat het niet negatief wordt
+        }
+
+        cartTotalElement.textContent = `Totaal: €${total.toFixed(2)}`;
+    }
+
+    // Kortingscode toepassen
+    document.getElementById('apply-discount-btn').addEventListener('click', () => {
+        const discountCode = document.getElementById('discount-code').value.trim();
+        if (!discountCode) {
+            alert('Voer een kortingscode in!');
+            return;
+        }
+
+        fetch('http://localhost:3000/apply-discount', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ code: discountCode })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                document.getElementById('discount-message').textContent = data.error;
+            } else {
+                discount = data.discount_value;
+                document.getElementById('discount-message').textContent = `Korting toegepast: €${discount}`;
+                updateCart();
+            }
+        })
+        .catch(err => console.error('Fout bij het toepassen van kortingscode:', err));
+    });
+
+    // Afrekenen knop
+    document.getElementById('checkout-btn').addEventListener('click', () => {
+        if (cart.length > 0) {
+            alert(`Afrekenen: ${cart.length} item(s) - Totaal: €${cart.reduce((sum, item) => sum + item.price, 0).toFixed(2)}`);
+        } else {
+            alert('Je winkelwagentje is leeg!');
+        }
+    });
+
+</script>
+
+</body>
+</html>
